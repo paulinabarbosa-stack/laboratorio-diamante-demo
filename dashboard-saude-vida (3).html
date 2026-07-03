@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drogaria Saúde & Vida — Painel do Supervisor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --sv-blue: #1B2D7A; --sv-blue2: #2D3E8F; --sv-orange: #E8642A;
+  --sv-green: #4CAF50; --sv-green2: #388E3C; --sv-light: #E8EDF8;
+  --sv-text: #1a1a2e; --sv-muted: #6b7280; --sv-border: #e2e8f0; --sv-card: #f8fafc;
+}
+html, body { height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; }
+.wrap { display: flex; height: 100vh; }
+
+/* SIDEBAR */
+.sidebar { width: 200px; background: var(--sv-blue); display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar-logo { padding: 18px 14px 14px; border-bottom: 0.5px solid rgba(255,255,255,0.1); }
+.logo-box { background: white; border-radius: 8px; padding: 4px 8px; width: 100%; display: flex; align-items: center; justify-content: center; height: 50px; margin-bottom: 8px; }
+.logo-box img { height: 42px; width: auto; object-fit: contain; }
+.sidebar-subtitle { font-size: 10px; color: rgba(255,255,255,0.55); text-align: center; line-height: 1.5; }
+.nav { flex: 1; padding: 10px 0; overflow-y: auto; }
+.nav-section { font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.35); padding: 12px 16px 4px; letter-spacing: 0.1em; text-transform: uppercase; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 10px 16px; cursor: pointer; font-size: 12px; color: rgba(255,255,255,0.65); border-left: 3px solid transparent; transition: all 0.12s; user-select: none; }
+.nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+.nav-item.active { background: rgba(255,255,255,0.12); color: white; border-left-color: var(--sv-orange); }
+.nav-item i { font-size: 17px; flex-shrink: 0; }
+.nav-badge { margin-left: auto; background: var(--sv-orange); color: white; font-size: 9px; padding: 1px 6px; border-radius: 10px; font-weight: 600; }
+.sidebar-footer { padding: 14px 16px; border-top: 0.5px solid rgba(255,255,255,0.1); }
+.online-pill { display: flex; align-items: center; gap: 7px; font-size: 11px; color: rgba(255,255,255,0.75); }
+.online-dot { width: 8px; height: 8px; background: var(--sv-green); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+/* MAIN */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.main-header { padding: 14px 24px; border-bottom: 0.5px solid var(--sv-border); display: flex; align-items: center; justify-content: space-between; background: white; flex-shrink: 0; }
+.main-header h2 { font-size: 16px; font-weight: 600; color: var(--sv-blue); }
+.main-header p { font-size: 11px; color: var(--sv-muted); margin-top: 2px; }
+.date-badge { font-size: 11px; color: var(--sv-muted); background: var(--sv-light); padding: 5px 12px; border-radius: 20px; white-space: nowrap; }
+.main-body { flex: 1; overflow-y: auto; background: #f1f5f9; padding: 20px 24px; }
+
+/* PANELS */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* METRICS */
+.metrics4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+.metrics2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; margin-bottom: 16px; }
+.metric { background: white; border: 0.5px solid var(--sv-border); border-radius: 12px; padding: 14px 16px; }
+.metric-label { font-size: 11px; color: var(--sv-muted); margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+.metric-label i { font-size: 15px; color: var(--sv-blue2); }
+.metric-value { font-size: 24px; font-weight: 600; color: var(--sv-blue); }
+.metric-sub { font-size: 10px; color: var(--sv-green2); margin-top: 3px; font-weight: 500; }
+
+/* UNIDADES */
+.unidades3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
+.unidade { background: var(--sv-light); border: 0.5px solid #c7d2f0; border-radius: 12px; padding: 14px; }
+.unidade-name { font-size: 11px; font-weight: 600; color: var(--sv-blue); margin-bottom: 9px; display: flex; align-items: center; gap: 5px; }
+.sdot { width: 7px; height: 7px; border-radius: 50%; background: var(--sv-green); display: inline-block; }
+.unidade-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--sv-muted); margin-bottom: 3px; }
+.unidade-row span:last-child { color: var(--sv-text); font-weight: 600; }
+
+/* CARDS */
+.card { background: white; border: 0.5px solid var(--sv-border); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+.card:last-child { margin-bottom: 0; }
+.card-title { font-size: 13px; font-weight: 600; color: var(--sv-blue); margin-bottom: 14px; display: flex; align-items: center; gap: 7px; }
+.card-title i { font-size: 16px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+/* BARS */
+.bar-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.bar-item:last-child { margin-bottom: 0; }
+.bar-label { font-size: 12px; color: var(--sv-text); width: 140px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { flex: 1; background: var(--sv-light); border-radius: 4px; height: 10px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; background: var(--sv-blue); transition: width 0.6s ease; }
+.bar-fill.g { background: var(--sv-green2); }
+.bar-fill.o { background: var(--sv-orange); }
+.bar-count { font-size: 11px; color: var(--sv-muted); width: 35px; text-align: right; flex-shrink: 0; }
+
+/* PAGAMENTOS */
+.pgto5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin-bottom: 14px; }
+.pgto-card { border-radius: 12px; padding: 14px 8px; text-align: center; }
+.pgto-card.pix { background: #e0f7e9; } .pgto-card.cred { background: #e8edf8; }
+.pgto-card.deb { background: #f0e8f8; } .pgto-card.din { background: #fef3c7; } .pgto-card.cri { background: #fce8e0; }
+.pgto-icon { font-size: 20px; margin-bottom: 5px; }
+.pgto-icon.pix{color:#1a7a3c;} .pgto-icon.cred{color:var(--sv-blue);} .pgto-icon.deb{color:#6b21a8;} .pgto-icon.din{color:#92400e;} .pgto-icon.cri{color:#9a3412;}
+.pgto-lbl { font-size: 10px; color: var(--sv-muted); margin-bottom: 4px; }
+.pgto-val { font-size: 14px; font-weight: 600; }
+.pgto-val.pix{color:#1a7a3c;} .pgto-val.cred{color:var(--sv-blue);} .pgto-val.deb{color:#6b21a8;} .pgto-val.din{color:#92400e;} .pgto-val.cri{color:#9a3412;}
+.pgto-pct { font-size: 10px; color: var(--sv-muted); margin-top: 2px; }
+
+/* TABELA */
+.vendas-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.vendas-table th { text-align: left; padding: 8px 10px; font-size: 11px; font-weight: 600; color: var(--sv-muted); border-bottom: 0.5px solid var(--sv-border); background: var(--sv-card); }
+.vendas-table td { padding: 10px 10px; border-bottom: 0.5px solid var(--sv-border); color: var(--sv-text); }
+.vendas-table tr:last-child td { border-bottom: none; }
+.vendas-table tr:hover td { background: #f8fafc; }
+.pill { font-size: 10px; border-radius: 10px; padding: 3px 8px; font-weight: 600; white-space: nowrap; }
+.pill.pix{background:#e0f7e9;color:#1a7a3c;} .pill.cred{background:#e8edf8;color:var(--sv-blue);}
+.pill.deb{background:#f0e8f8;color:#6b21a8;} .pill.din{background:#fef3c7;color:#92400e;} .pill.cri{background:#fce8e0;color:#9a3412;}
+.total-bar { display: flex; justify-content: space-between; align-items: center; background: var(--sv-blue); border-radius: 10px; padding: 13px 18px; margin-top: 12px; }
+.total-bar span { font-size: 12px; color: rgba(255,255,255,0.8); }
+.total-bar strong { font-size: 20px; color: white; font-weight: 600; }
+
+/* CONVERSAS */
+.conv-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 0.5px solid var(--sv-border); cursor: pointer; transition: background 0.1s; border-radius: 8px; }
+.conv-item:last-child { border-bottom: none; }
+.conv-item:hover { background: #f8fafc; padding: 14px 8px; margin: 0 -8px; }
+.conv-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: white; flex-shrink: 0; }
+.av1{background:var(--sv-blue);} .av2{background:#0891b2;} .av3{background:var(--sv-green2);} .av4{background:#7c3aed;} .av5{background:#be185d;} .av6{background:#b45309;}
+.conv-body { flex: 1; min-width: 0; }
+.conv-name { font-size: 13px; font-weight: 600; color: var(--sv-text); margin-bottom: 2px; }
+.conv-preview { font-size: 12px; color: var(--sv-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
+.conv-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.tag { font-size: 10px; border-radius: 10px; padding: 2px 8px; font-weight: 600; }
+.tag.pedido{background:#dcfce7;color:#166534;} .tag.consulta{background:var(--sv-light);color:var(--sv-blue);}
+.tag.info{background:#f3f4f6;color:#374151;} .tag.receita{background:#fef3c7;color:#92400e;}
+.conv-right { text-align: right; flex-shrink: 0; }
+.conv-time { font-size: 10px; color: var(--sv-muted); }
+.conv-unidade { font-size: 10px; color: var(--sv-blue2); margin-top: 3px; }
+.conv-valor { font-size: 12px; font-weight: 600; color: var(--sv-green2); margin-top: 3px; }
+.conv-valor.none { color: var(--sv-muted); font-weight: 400; }
+
+/* THREAD */
+.msg-thread { background: #f1f5f9; border-radius: 10px; padding: 16px; margin: 4px 0 10px; display: none; }
+.msg-thread.open { display: block; }
+.msg { max-width: 72%; margin-bottom: 10px; }
+.msg.recv { margin-right: auto; }
+.msg.sent { margin-left: auto; text-align: right; }
+.msg-bubble { display: inline-block; padding: 9px 13px; font-size: 12px; line-height: 1.6; }
+.msg.recv .msg-bubble { background: white; border: 0.5px solid var(--sv-border); color: var(--sv-text); border-radius: 14px 14px 14px 3px; }
+.msg.sent .msg-bubble { background: var(--sv-blue); color: white; border-radius: 14px 14px 3px 14px; }
+.msg-time { font-size: 10px; color: var(--sv-muted); margin-top: 3px; }
+
+/* CHART */
+.chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 100px; margin-bottom: 8px; }
+.c-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.c-val { font-size: 9px; color: var(--sv-muted); }
+.c-rect { width: 100%; border-radius: 4px 4px 0 0; }
+.c-lbl { font-size: 9px; color: var(--sv-muted); }
+
+/* ATIVIDADE */
+.tl-item { display: flex; gap: 11px; padding: 9px 0; border-bottom: 0.5px solid var(--sv-border); }
+.tl-item:last-child { border-bottom: none; }
+.tl-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; }
+.tl-icon.g{background:#dcfce7;color:#166534;} .tl-icon.b{background:var(--sv-light);color:var(--sv-blue);} .tl-icon.a{background:#fef3c7;color:#92400e;}
+.tl-body { flex: 1; }
+.tl-msg { font-size: 12px; color: var(--sv-text); line-height: 1.5; }
+.tl-time { font-size: 10px; color: var(--sv-muted); margin-top: 2px; }
+
+/* ENTREGAS / MOTOBOYS */
+.moto-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+.moto-card { background: white; border: 0.5px solid var(--sv-border); border-radius: 12px; padding: 16px; text-align: center; }
+.moto-avatar { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: white; margin: 0 auto 10px; }
+.moto-name { font-size: 12px; font-weight: 600; color: var(--sv-text); }
+.moto-tag { font-size: 9px; color: var(--sv-muted); margin-bottom: 10px; }
+.moto-stat { display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-top: 0.5px solid var(--sv-border); }
+.moto-stat span:last-child { font-weight: 600; color: var(--sv-text); }
+.moto-status { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 10px; margin-top: 8px; }
+.moto-status.ok { background: #dcfce7; color: #166534; }
+.moto-status.late { background: #fee2e2; color: #991b1b; }
+.moto-status.idle { background: #f3f4f6; color: #6b7280; }
+
+.entregas-table td:nth-child(5) { font-weight: 600; }
+.late-row td { color: #991b1b; }
+.pill.atrasada { background: #fee2e2; color: #991b1b; }
+.pill.entregue { background: #dcfce7; color: #166534; }
+.pill.transito { background: #fef3c7; color: #92400e; }
+
+/* CONFERÊNCIA DE NOTAS */
+.nota-upload { border: 2px dashed #c7d2f0; border-radius: 12px; padding: 28px; text-align: center; background: var(--sv-light); margin-bottom: 16px; cursor: pointer; transition: all 0.15s; }
+.nota-upload:hover { border-color: var(--sv-blue); background: #dce6f8; }
+.nota-upload i { font-size: 36px; color: var(--sv-blue2); margin-bottom: 8px; display: block; }
+.nota-upload p { font-size: 13px; color: var(--sv-muted); margin-bottom: 4px; }
+.nota-upload span { font-size: 11px; color: var(--sv-muted); }
+.nota-upload .upload-btn { display: inline-block; margin-top: 12px; background: var(--sv-blue); color: white; font-size: 12px; font-weight: 600; padding: 8px 20px; border-radius: 8px; cursor: pointer; }
+
+.conf-status { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; margin-bottom: 14px; }
+.conf-status.ok { background: #dcfce7; color: #166534; }
+.conf-status.warn { background: #fef3c7; color: #92400e; }
+.conf-status.error { background: #fee2e2; color: #991b1b; }
+.conf-status i { font-size: 18px; }
+
+.conf-table td.ok { color: #166534; font-weight: 600; }
+.conf-table td.warn { color: #92400e; font-weight: 600; }
+.conf-table td.err { color: #991b1b; font-weight: 600; }
+.conf-resumo { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
+
+.hist-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--sv-border); }
+.hist-item:last-child { border-bottom: none; }
+.hist-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.hist-icon.ok { background: #dcfce7; color: #166534; }
+.hist-icon.warn { background: #fef3c7; color: #92400e; }
+.hist-icon.err { background: #fee2e2; color: #991b1b; }
+.hist-body { flex: 1; }
+.hist-title { font-size: 12px; font-weight: 600; color: var(--sv-text); }
+.hist-sub { font-size: 11px; color: var(--sv-muted); margin-top: 2px; }
+.hist-right { text-align: right; flex-shrink: 0; }
+.hist-date { font-size: 10px; color: var(--sv-muted); }
+.hist-valor { font-size: 12px; font-weight: 600; color: var(--sv-text); margin-top: 2px; }
+
+@media (max-width: 768px) {
+  .sidebar { width: 52px; }
+  .sidebar-logo, .nav-section, .nav-item span, .sidebar-subtitle, .sidebar-footer .online-pill span { display: none; }
+  .nav-item { justify-content: center; padding: 12px; }
+  .nav-item i { margin: 0; }
+  .metrics4 { grid-template-columns: repeat(2,1fr); }
+  .unidades3 { grid-template-columns: 1fr; }
+  .pgto5 { grid-template-columns: repeat(3,1fr); }
+  .grid2 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-box">
+        <img src="https://raw.githubusercontent.com/paulinabarbosa-stack/agente_farmacia/main/Novo-Projeto-75.png.webp" alt="Saúde e Vida" onerror="this.style.display='none';this.parentNode.innerHTML='<span style=\'font-size:10px;font-weight:600;color:#1B2D7A;text-align:center;line-height:1.3\'>DROGARIA<br>Saúde &amp; Vida</span>'" />
+      </div>
+      <div class="sidebar-subtitle">Supervisor de atendimento<br>Diamantina, MG</div>
+    </div>
+    <div class="nav">
+      <div class="nav-section">Visão geral</div>
+      <div class="nav-item active" onclick="go('resumo',this)"><i class="ti ti-layout-dashboard"></i><span>Resumo do dia</span></div>
+      <div class="nav-item" onclick="go('mensal',this)"><i class="ti ti-calendar-month"></i><span>Visão mensal</span></div>
+      <div class="nav-section">Atendimento</div>
+      <div class="nav-item" onclick="go('conversas',this)"><i class="ti ti-messages"></i><span>Conversas</span> <span class="nav-badge">4</span></div>
+      <div class="nav-section">Vendas</div>
+      <div class="nav-item" onclick="go('vendas',this)"><i class="ti ti-receipt"></i><span>Registro de vendas</span></div>
+      <div class="nav-item" onclick="go('produtos',this)"><i class="ti ti-pill"></i><span>Produtos</span></div>
+      <div class="nav-section">Logística</div>
+      <div class="nav-item" onclick="go('entregas',this)"><i class="ti ti-motorbike"></i><span>Entregas</span></div>
+      <div class="nav-section">Estoque</div>
+      <div class="nav-item" onclick="go('notas',this)"><i class="ti ti-file-check"></i><span>Conferência de Notas</span></div>
+      <div class="nav-section">Unidades</div>
+      <div class="nav-item" onclick="go('unidades',this)"><i class="ti ti-building-store"></i><span>Por unidade</span></div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="online-pill"><div class="online-dot"></div><span>Isabela online</span></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="main-header">
+      <div id="header-info">
+        <h2>Resumo do dia</h2>
+        <p>Atualizado agora · domingo, 29 de junho de 2026</p>
+      </div>
+      <div class="date-badge" id="current-date">29/06/2026</div>
+    </div>
+    <div class="main-body">
+
+      <!-- RESUMO -->
+      <div class="panel active" id="p-resumo">
+        <div class="metrics4">
+          <div class="metric"><div class="metric-label"><i class="ti ti-message-circle"></i>Atendimentos</div><div class="metric-value">47</div><div class="metric-sub">↑ 12% vs ontem</div></div>
+          <div class="metric"><div class="metric-label"><i class="ti ti-shopping-cart"></i>Pedidos</div><div class="metric-value">18</div><div class="metric-sub">↑ 3 desde às 18h</div></div>
+          <div class="metric"><div class="metric-label"><i class="ti ti-currency-real"></i>Faturamento</div><div class="metric-value">R$847</div><div class="metric-sub">↑ 22% vs ontem</div></div>
+          <div class="metric"><div class="metric-label"><i class="ti ti-star"></i>Avaliações Google</div><div class="metric-value">9</div><div class="metric-sub">↑ 2 esta semana</div></div>
+        </div>
+        <div class="unidades3">
+          <div class="unidade"><div class="unidade-name"><span class="sdot"></span><i class="ti ti-building-store"></i>Barão de Guaicuí</div><div class="unidade-row"><span>Atendimentos</span><span>21</span></div><div class="unidade-row"><span>Pedidos</span><span>8</span></div><div class="unidade-row"><span>Faturamento</span><span>R$389</span></div></div>
+          <div class="unidade"><div class="unidade-name"><span class="sdot"></span><i class="ti ti-building-store"></i>Largo Dom João</div><div class="unidade-row"><span>Atendimentos</span><span>17</span></div><div class="unidade-row"><span>Pedidos</span><span>7</span></div><div class="unidade-row"><span>Faturamento</span><span>R$312</span></div></div>
+          <div class="unidade"><div class="unidade-name"><span class="sdot"></span><i class="ti ti-building-store"></i>Nova unidade</div><div class="unidade-row"><span>Atendimentos</span><span>9</span></div><div class="unidade-row"><span>Pedidos</span><span>3</span></div><div class="unidade-row"><span>Faturamento</span><span>R$146</span></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-activity"></i>Atividade recente</div>
+          <div class="tl-item"><div class="tl-icon g"><i class="ti ti-check"></i></div><div class="tl-body"><div class="tl-msg">Pedido de Maria Souza — Dipirona + Vitamina D · Pix · R$28,80</div><div class="tl-time">agora · Barão de Guaicuí</div></div></div>
+          <div class="tl-item"><div class="tl-icon b"><i class="ti ti-message"></i></div><div class="tl-body"><div class="tl-msg">João Pedro consultou Amoxicilina 500mg — informado sobre receita médica</div><div class="tl-time">21:57 · Largo Dom João</div></div></div>
+          <div class="tl-item"><div class="tl-icon g"><i class="ti ti-star"></i></div><div class="tl-body"><div class="tl-msg">Nova avaliação Google 5 estrelas — Barão de Guaicuí</div><div class="tl-time">21:45 · Google Maps</div></div></div>
+          <div class="tl-item"><div class="tl-icon a"><i class="ti ti-alert-triangle"></i></div><div class="tl-body"><div class="tl-msg">Cliente solicitou Ritalina 10mg — receita especial exigida, cliente orientado</div><div class="tl-time">21:12 · Nova unidade</div></div></div>
+        </div>
+      </div>
+
+      <!-- MENSAL -->
+      <div class="panel" id="p-mensal">
+        <div class="metrics4">
+          <div class="metric"><div class="metric-label"><i class="ti ti-message-circle"></i>Atendimentos</div><div class="metric-value">1.284</div><div class="metric-sub">↑ 18% vs junho</div></div>
+          <div class="metric"><div class="metric-label"><i class="ti ti-shopping-cart"></i>Pedidos</div><div class="metric-value">487</div><div class="metric-sub">↑ 23% vs junho</div></div>
+          <div class="metric"><div class="metric-label"><i class="ti ti-currency-real"></i>Faturamento</div><div class="metric-value">R$22.840</div><div class="metric-sub">↑ 31% vs junho</div></div>
+          <div class="metric"><div class="metric-label"><i class="ti ti-star"></i>Avaliações Google</div><div class="metric-value">34</div><div class="metric-sub">↑ 12 vs junho</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-chart-bar"></i>Faturamento — últimos 6 meses</div>
+          <div class="chart-bars">
+            <div class="c-col"><div class="c-val">14.2k</div><div class="c-rect" style="height:52px;background:var(--sv-light);border:0.5px solid #c7d2f0"></div><div class="c-lbl">Fev</div></div>
+            <div class="c-col"><div class="c-val">15.8k</div><div class="c-rect" style="height:60px;background:var(--sv-light);border:0.5px solid #c7d2f0"></div><div class="c-lbl">Mar</div></div>
+            <div class="c-col"><div class="c-val">16.1k</div><div class="c-rect" style="height:62px;background:var(--sv-light);border:0.5px solid #c7d2f0"></div><div class="c-lbl">Abr</div></div>
+            <div class="c-col"><div class="c-val">17.4k</div><div class="c-rect" style="height:68px;background:var(--sv-light);border:0.5px solid #c7d2f0"></div><div class="c-lbl">Mai</div></div>
+            <div class="c-col"><div class="c-val">17.4k</div><div class="c-rect" style="height:68px;background:var(--sv-light);border:0.5px solid #c7d2f0"></div><div class="c-lbl">Jun</div></div>
+            <div class="c-col"><div class="c-val" style="color:var(--sv-orange);font-weight:600">22.8k</div><div class="c-rect" style="height:90px;background:var(--sv-orange)"></div><div class="c-lbl" style="color:var(--sv-orange);font-weight:600">Jul ✦</div></div>
+          </div>
+          <div style="font-size:10px;color:var(--sv-muted);text-align:right">✦ Primeiro mês com a Isabela</div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-credit-card"></i>Pagamentos — julho</div>
+          <div class="pgto5">
+            <div class="pgto-card pix"><div class="pgto-icon pix"><i class="ti ti-qrcode"></i></div><div class="pgto-lbl">Pix</div><div class="pgto-val pix">R$8.451</div><div class="pgto-pct">37%</div></div>
+            <div class="pgto-card cred"><div class="pgto-icon cred"><i class="ti ti-credit-card"></i></div><div class="pgto-lbl">Crédito</div><div class="pgto-val cred">R$6.165</div><div class="pgto-pct">27%</div></div>
+            <div class="pgto-card deb"><div class="pgto-icon deb"><i class="ti ti-credit-card"></i></div><div class="pgto-lbl">Débito</div><div class="pgto-val deb">R$4.568</div><div class="pgto-pct">20%</div></div>
+            <div class="pgto-card din"><div class="pgto-icon din"><i class="ti ti-cash"></i></div><div class="pgto-lbl">Dinheiro</div><div class="pgto-val din">R$2.284</div><div class="pgto-pct">10%</div></div>
+            <div class="pgto-card cri"><div class="pgto-icon cri"><i class="ti ti-file-invoice"></i></div><div class="pgto-lbl">Crediário</div><div class="pgto-val cri">R$1.372</div><div class="pgto-pct">6%</div></div>
+          </div>
+          <div class="total-bar"><span>Total faturado em julho</span><strong>R$22.840,00</strong></div>
+        </div>
+      </div>
+
+      <!-- CONVERSAS -->
+      <div class="panel" id="p-conversas">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-messages"></i>Conversas de hoje — clique para ver o histórico</div>
+          <div class="conv-item" onclick="toggleThread('t1')">
+            <div class="conv-avatar av1">MS</div>
+            <div class="conv-body"><div class="conv-name">Maria Souza · 55 38 99123-4567</div><div class="conv-preview">Quero dipirona 500mg e vitamina D 2000UI por favor</div><div class="conv-tags"><span class="tag pedido">Pedido</span><span class="tag info">Pix</span></div></div>
+            <div class="conv-right"><div class="conv-time">22:04</div><div class="conv-unidade">Barão de Guaicuí</div><div class="conv-valor">R$28,80</div></div>
+          </div>
+          <div class="msg-thread" id="t1">
+            <div class="msg recv"><div class="msg-bubble">Boa noite! Sou a Isabela, atendente virtual da Drogaria Saúde & Vida. Como posso te ajudar hoje?</div><div class="msg-time">21:58</div></div>
+            <div class="msg sent"><div class="msg-bubble">Quero dipirona 500mg e vitamina D 2000UI por favor</div><div class="msg-time">22:01</div></div>
+            <div class="msg recv"><div class="msg-bubble">Ótimo! A Dipirona 500mg (20 comp) custa R$8,90 e a Vitamina D 2000UI (30 caps) custa R$24,90. Para finalizar seu pedido preciso de: Nome completo, Endereço, CPF e Forma de pagamento.</div><div class="msg-time">22:01</div></div>
+            <div class="msg sent"><div class="msg-bubble">Maria Souza · Rua das Acácias, 15, Centro · 123.456.789-00 · Pix</div><div class="msg-time">22:03</div></div>
+            <div class="msg recv"><div class="msg-bubble">Pedido registrado! Em breve nossa equipe entrará em contato para confirmar a entrega. Foi um prazer te atender! 😊⭐</div><div class="msg-time">22:04</div></div>
+          </div>
+
+          <div class="conv-item" onclick="toggleThread('t2')">
+            <div class="conv-avatar av2">JP</div>
+            <div class="conv-body"><div class="conv-name">João Pedro · 55 38 98654-3210</div><div class="conv-preview">Tem amoxicilina 500mg disponível?</div><div class="conv-tags"><span class="tag consulta">Consulta</span><span class="tag receita">Receita</span></div></div>
+            <div class="conv-right"><div class="conv-time">21:57</div><div class="conv-unidade">Largo Dom João</div><div class="conv-valor none">—</div></div>
+          </div>
+          <div class="msg-thread" id="t2">
+            <div class="msg recv"><div class="msg-bubble">Boa noite! Sou a Isabela 😊 Como posso ajudar?</div><div class="msg-time">21:54</div></div>
+            <div class="msg sent"><div class="msg-bubble">Tem amoxicilina 500mg disponível?</div><div class="msg-time">21:56</div></div>
+            <div class="msg recv"><div class="msg-bubble">Temos sim! A Amoxicilina 500mg (21 caps) custa R$18,90. Atenção: esse medicamento exige receita médica válida. Deseja fazer o pedido?</div><div class="msg-time">21:57</div></div>
+          </div>
+
+          <div class="conv-item" onclick="toggleThread('t3')">
+            <div class="conv-avatar av3">AL</div>
+            <div class="conv-body"><div class="conv-name">Ana Lima · 55 38 99789-0123</div><div class="conv-preview">Paracetamol 750mg, Rua das Flores, 42...</div><div class="conv-tags"><span class="tag pedido">Pedido</span><span class="tag info">Crédito</span></div></div>
+            <div class="conv-right"><div class="conv-time">21:43</div><div class="conv-unidade">Barão de Guaicuí</div><div class="conv-valor">R$9,90</div></div>
+          </div>
+          <div class="msg-thread" id="t3">
+            <div class="msg recv"><div class="msg-bubble">Boa noite! Sou a Isabela 😊 Como posso ajudar?</div><div class="msg-time">21:40</div></div>
+            <div class="msg sent"><div class="msg-bubble">Quero paracetamol 750mg</div><div class="msg-time">21:41</div></div>
+            <div class="msg recv"><div class="msg-bubble">O Paracetamol 750mg (20 comp) custa R$9,90. Para finalizar preciso de: Nome completo, Endereço, CPF e Forma de pagamento.</div><div class="msg-time">21:41</div></div>
+            <div class="msg sent"><div class="msg-bubble">Ana Lima · Rua das Flores, 42 · 987.654.321-00 · Cartão crédito</div><div class="msg-time">21:43</div></div>
+            <div class="msg recv"><div class="msg-bubble">Pedido registrado! Em breve nossa equipe entrará em contato. Foi um prazer te atender! 😊</div><div class="msg-time">21:43</div></div>
+          </div>
+
+          <div class="conv-item" onclick="toggleThread('t4')">
+            <div class="conv-avatar av4">CR</div>
+            <div class="conv-body"><div class="conv-name">Carlos Reis · 55 38 98345-6789</div><div class="conv-preview">Qual o horário de funcionamento?</div><div class="conv-tags"><span class="tag info">Info</span></div></div>
+            <div class="conv-right"><div class="conv-time">21:31</div><div class="conv-unidade">Nova unidade</div><div class="conv-valor none">—</div></div>
+          </div>
+          <div class="msg-thread" id="t4">
+            <div class="msg recv"><div class="msg-bubble">Boa noite! Sou a Isabela 😊 Como posso ajudar?</div><div class="msg-time">21:30</div></div>
+            <div class="msg sent"><div class="msg-bubble">Qual o horário de funcionamento?</div><div class="msg-time">21:31</div></div>
+            <div class="msg recv"><div class="msg-bubble">Funcionamos todos os dias das 7h às 22h, inclusive fins de semana e feriados! Posso ajudar com mais alguma coisa? 😊</div><div class="msg-time">21:31</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VENDAS -->
+      <div class="panel" id="p-vendas">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-credit-card"></i>Formas de pagamento — hoje</div>
+          <div class="pgto5">
+            <div class="pgto-card pix"><div class="pgto-icon pix"><i class="ti ti-qrcode"></i></div><div class="pgto-lbl">Pix</div><div class="pgto-val pix">R$312</div><div class="pgto-pct">37%</div></div>
+            <div class="pgto-card cred"><div class="pgto-icon cred"><i class="ti ti-credit-card"></i></div><div class="pgto-lbl">Crédito</div><div class="pgto-val cred">R$228</div><div class="pgto-pct">27%</div></div>
+            <div class="pgto-card deb"><div class="pgto-icon deb"><i class="ti ti-credit-card"></i></div><div class="pgto-lbl">Débito</div><div class="pgto-val deb">R$169</div><div class="pgto-pct">20%</div></div>
+            <div class="pgto-card din"><div class="pgto-icon din"><i class="ti ti-cash"></i></div><div class="pgto-lbl">Dinheiro</div><div class="pgto-val din">R$88</div><div class="pgto-pct">10%</div></div>
+            <div class="pgto-card cri"><div class="pgto-icon cri"><i class="ti ti-file-invoice"></i></div><div class="pgto-lbl">Crediário</div><div class="pgto-val cri">R$50</div><div class="pgto-pct">6%</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-receipt"></i>Registro de vendas</div>
+          <table class="vendas-table">
+            <thead><tr><th>Hora</th><th>Cliente</th><th>Produto(s)</th><th>Unidade</th><th>Pagamento</th><th style="text-align:right">Valor</th></tr></thead>
+            <tbody>
+              <tr><td>22:04</td><td>Maria Souza</td><td>Dipirona + Vitamina D</td><td>Barão</td><td><span class="pill pix">Pix</span></td><td style="text-align:right;font-weight:600">R$28,80</td></tr>
+              <tr><td>21:43</td><td>Ana Lima</td><td>Paracetamol 750mg</td><td>Barão</td><td><span class="pill cred">Crédito</span></td><td style="text-align:right;font-weight:600">R$9,90</td></tr>
+              <tr><td>21:12</td><td>Paulo Ferreira</td><td>Losartana + Enalapril</td><td>Nova</td><td><span class="pill pix">Pix</span></td><td style="text-align:right;font-weight:600">R$27,80</td></tr>
+              <tr><td>20:55</td><td>Lúcia Mendes</td><td>Vitamina C + Zinco</td><td>Dom João</td><td><span class="pill din">Dinheiro</span></td><td style="text-align:right;font-weight:600">R$42,80</td></tr>
+              <tr><td>20:33</td><td>Roberto Alves</td><td>Dorflex (30 comp)</td><td>Dom João</td><td><span class="pill deb">Débito</span></td><td style="text-align:right;font-weight:600">R$24,90</td></tr>
+              <tr><td>20:10</td><td>Fernanda Costa</td><td>Yasmin (21 comp)</td><td>Barão</td><td><span class="pill cri">Crediário</span></td><td style="text-align:right;font-weight:600">R$39,90</td></tr>
+              <tr><td>19:48</td><td>Carlos Reis</td><td>Centrum + Vitamina D</td><td>Nova</td><td><span class="pill cred">Crédito</span></td><td style="text-align:right;font-weight:600">R$74,80</td></tr>
+            </tbody>
+          </table>
+          <div class="total-bar"><span>Total de vendas hoje</span><strong>R$847,00</strong></div>
+        </div>
+      </div>
+
+      <!-- PRODUTOS -->
+      <div class="panel" id="p-produtos">
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title"><i class="ti ti-chart-bar"></i>Mais pedidos hoje</div>
+            <div class="bar-item"><div class="bar-label">Dipirona 500mg</div><div class="bar-track"><div class="bar-fill" style="width:88%"></div></div><div class="bar-count">22</div></div>
+            <div class="bar-item"><div class="bar-label">Paracetamol 750mg</div><div class="bar-track"><div class="bar-fill" style="width:64%"></div></div><div class="bar-count">16</div></div>
+            <div class="bar-item"><div class="bar-label">Vitamina D 2000UI</div><div class="bar-track"><div class="bar-fill g" style="width:52%"></div></div><div class="bar-count">13</div></div>
+            <div class="bar-item"><div class="bar-label">Losartana 50mg</div><div class="bar-track"><div class="bar-fill" style="width:40%"></div></div><div class="bar-count">10</div></div>
+            <div class="bar-item"><div class="bar-label">Dorflex</div><div class="bar-track"><div class="bar-fill g" style="width:28%"></div></div><div class="bar-count">7</div></div>
+            <div class="bar-item"><div class="bar-label">Escitalopram 10mg</div><div class="bar-track"><div class="bar-fill o" style="width:20%"></div></div><div class="bar-count">5</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-chart-bar"></i>Mais pedidos no mês</div>
+            <div class="bar-item"><div class="bar-label">Dipirona 500mg</div><div class="bar-track"><div class="bar-fill" style="width:90%"></div></div><div class="bar-count">312</div></div>
+            <div class="bar-item"><div class="bar-label">Paracetamol 750mg</div><div class="bar-track"><div class="bar-fill" style="width:68%"></div></div><div class="bar-count">236</div></div>
+            <div class="bar-item"><div class="bar-label">Vitamina D 2000UI</div><div class="bar-track"><div class="bar-fill g" style="width:55%"></div></div><div class="bar-count">189</div></div>
+            <div class="bar-item"><div class="bar-label">Losartana 50mg</div><div class="bar-track"><div class="bar-fill" style="width:42%"></div></div><div class="bar-count">144</div></div>
+            <div class="bar-item"><div class="bar-label">Dorflex</div><div class="bar-track"><div class="bar-fill g" style="width:30%"></div></div><div class="bar-count">103</div></div>
+            <div class="bar-item"><div class="bar-label">Yasmin</div><div class="bar-track"><div class="bar-fill o" style="width:22%"></div></div><div class="bar-count">76</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENTREGAS -->
+      <div class="panel" id="p-entregas">
+        <div class="metrics4">
+          <div class="metric"><div class="metric-label"><i class="ti ti-package"></i>Entregas hoje</div><div class="metric-value">15</div><div class="metric-sub">↑ 4 vs ontem</div></div>
+          <div class="metric"><div class="metric-label"><i class="ti ti-clock"></i>Tempo médio</div><div class="metric-value">34<span style="font-size:14px">min</span></div><div class="metric-sub" style="color:#b45309">↑ 6min vs meta</div></div>
+          <div class="metric"><div class="metric-label"><i class="ti ti-alert-triangle"></i>Entregas atrasadas</div><div class="metric-value" style="color:#b91c1c">3</div><div class="metric-sub" style="color:#b91c1c">20% do total hoje</div></div>
+          <div class="metric"><div class="metric-label"><i class="ti ti-circle-check"></i>No prazo</div><div class="metric-value">80%</div><div class="metric-sub">Meta: 90%</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="ti ti-users"></i>Produtividade por motoboy — hoje</div>
+          <div class="moto-grid">
+            <div class="moto-card">
+              <div class="moto-avatar" style="background:var(--sv-blue)">RS</div>
+              <div class="moto-name">Motoboy Renato Silva</div>
+              <div class="moto-tag">Barão de Guaicuí</div>
+              <div class="moto-stat"><span>Entregas</span><span>5</span></div>
+              <div class="moto-stat"><span>Tempo médio</span><span>28min</span></div>
+              <div class="moto-status ok"><i class="ti ti-circle-check"></i>No prazo</div>
+            </div>
+            <div class="moto-card">
+              <div class="moto-avatar" style="background:#0891b2">EC</div>
+              <div class="moto-name">Motoboy Eduardo Costa</div>
+              <div class="moto-tag">Largo Dom João</div>
+              <div class="moto-stat"><span>Entregas</span><span>4</span></div>
+              <div class="moto-stat"><span>Tempo médio</span><span>31min</span></div>
+              <div class="moto-status ok"><i class="ti ti-circle-check"></i>No prazo</div>
+            </div>
+            <div class="moto-card">
+              <div class="moto-avatar" style="background:#7c3aed">MA</div>
+              <div class="moto-name">Motoboy Marcos Andrade</div>
+              <div class="moto-tag">Barão de Guaicuí</div>
+              <div class="moto-stat"><span>Entregas</span><span>3</span></div>
+              <div class="moto-stat"><span>Tempo médio</span><span>52min</span></div>
+              <div class="moto-status late"><i class="ti ti-alert-triangle"></i>2 atrasos</div>
+            </div>
+            <div class="moto-card">
+              <div class="moto-avatar" style="background:#b45309">DT</div>
+              <div class="moto-name">Motoboy Diego Tavares</div>
+              <div class="moto-tag">Nova unidade</div>
+              <div class="moto-stat"><span>Entregas</span><span>3</span></div>
+              <div class="moto-stat"><span>Tempo médio</span><span>38min</span></div>
+              <div class="moto-status late"><i class="ti ti-alert-triangle"></i>1 atraso</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="ti ti-route"></i>Entregas em andamento e recentes</div>
+          <table class="vendas-table entregas-table">
+            <thead><tr><th>Hora pedido</th><th>Cliente</th><th>Motoboy</th><th>Unidade</th><th>Status</th><th style="text-align:right">Tempo</th></tr></thead>
+            <tbody>
+              <tr><td>22:04</td><td>Maria Souza</td><td>Motoboy Renato Silva</td><td>Barão</td><td><span class="pill transito">Em trânsito</span></td><td style="text-align:right">12min</td></tr>
+              <tr class="late-row"><td>21:38</td><td>Paulo Ferreira</td><td>Motoboy Marcos Andrade</td><td>Barão</td><td><span class="pill atrasada">Atrasada</span></td><td style="text-align:right;font-weight:600">46min</td></tr>
+              <tr><td>21:12</td><td>Lúcia Mendes</td><td>Motoboy Eduardo Costa</td><td>Dom João</td><td><span class="pill entregue">Entregue</span></td><td style="text-align:right">29min</td></tr>
+              <tr class="late-row"><td>20:55</td><td>Fernanda Costa</td><td>Motoboy Diego Tavares</td><td>Nova</td><td><span class="pill atrasada">Atrasada</span></td><td style="text-align:right;font-weight:600">51min</td></tr>
+              <tr><td>20:33</td><td>Roberto Alves</td><td>Motoboy Renato Silva</td><td>Barão</td><td><span class="pill entregue">Entregue</span></td><td style="text-align:right">24min</td></tr>
+              <tr><td>20:10</td><td>Carlos Reis</td><td>Motoboy Eduardo Costa</td><td>Dom João</td><td><span class="pill entregue">Entregue</span></td><td style="text-align:right">33min</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CONFERÊNCIA DE NOTAS -->
+      <div class="panel" id="p-notas">
+
+        <div class="conf-resumo">
+          <div class="metric"><div class="metric-label"><i class="ti ti-file-check"></i>Notas conferidas</div><div class="metric-value">23</div><div class="metric-sub">Este mês</div></div>
+          <div class="metric"><div class="metric-label"><i class="ti ti-circle-check"></i>Conferidas OK</div><div class="metric-value" style="color:var(--sv-green2)">19</div><div class="metric-sub">83% sem divergência</div></div>
+          <div class="metric"><div class="metric-label"><i class="ti ti-alert-triangle"></i>Com divergência</div><div class="metric-value" style="color:#b45309">4</div><div class="metric-sub">Requerem atenção</div></div>
+          <div class="metric"><div class="metric-label"><i class="ti ti-currency-real"></i>Valor conferido</div><div class="metric-value">R$48.2k</div><div class="metric-sub">Total do mês</div></div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title"><i class="ti ti-upload"></i>Conferir nova nota fiscal</div>
+          <div class="nota-upload" onclick="simularConferencia()">
+            <i class="ti ti-file-invoice"></i>
+            <p>Arraste o arquivo aqui ou clique para selecionar</p>
+            <span>PDF, JPG ou PNG · máximo 10MB</span>
+            <div class="upload-btn">Selecionar arquivo</div>
+          </div>
+          <div id="conf-resultado" style="display:none">
+            <div class="conf-status ok" id="conf-status-bar">
+              <i class="ti ti-circle-check"></i>
+              <span id="conf-status-texto">Nota conferida com sucesso — todos os itens conferem com o pedido</span>
+            </div>
+            <table class="vendas-table conf-table">
+              <thead><tr><th>Produto</th><th>Qtd. pedida</th><th>Qtd. recebida</th><th>Preço pedido</th><th>Preço nota</th><th>Status</th></tr></thead>
+              <tbody id="conf-tbody"></tbody>
+            </table>
+            <div class="total-bar" style="margin-top:12px">
+              <span id="conf-total-label">Total da nota</span>
+              <strong id="conf-total-valor">R$3.247,80</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="ti ti-history"></i>Histórico de conferências</div>
+          <div class="hist-item">
+            <div class="hist-icon ok"><i class="ti ti-circle-check"></i></div>
+            <div class="hist-body">
+              <div class="hist-title">Nota 004521 — Distribuidora Mineira</div>
+              <div class="hist-sub">32 itens · todos conferidos · sem divergência</div>
+            </div>
+            <div class="hist-right">
+              <div class="hist-date">29/06 · 10:42</div>
+              <div class="hist-valor">R$8.412,00</div>
+            </div>
+          </div>
+          <div class="hist-item">
+            <div class="hist-icon warn"><i class="ti ti-alert-triangle"></i></div>
+            <div class="hist-body">
+              <div class="hist-title">Nota 003897 — Pharma Distribuidora</div>
+              <div class="hist-sub">28 itens · 2 divergências de quantidade · Dipirona e Losartana</div>
+            </div>
+            <div class="hist-right">
+              <div class="hist-date">28/06 · 14:15</div>
+              <div class="hist-valor">R$6.230,50</div>
+            </div>
+          </div>
+          <div class="hist-item">
+            <div class="hist-icon ok"><i class="ti ti-circle-check"></i></div>
+            <div class="hist-body">
+              <div class="hist-title">Nota 002341 — Nutrifarma</div>
+              <div class="hist-sub">15 itens · todos conferidos · sem divergência</div>
+            </div>
+            <div class="hist-right">
+              <div class="hist-date">27/06 · 09:30</div>
+              <div class="hist-valor">R$4.180,00</div>
+            </div>
+          </div>
+          <div class="hist-item">
+            <div class="hist-icon err"><i class="ti ti-x"></i></div>
+            <div class="hist-body">
+              <div class="hist-title">Nota 001988 — Distribuidora Mineira</div>
+              <div class="hist-sub">20 itens · preço divergente em 3 produtos · requer aprovação</div>
+            </div>
+            <div class="hist-right">
+              <div class="hist-date">26/06 · 16:55</div>
+              <div class="hist-valor">R$5.940,00</div>
+            </div>
+          </div>
+          <div class="hist-item">
+            <div class="hist-icon ok"><i class="ti ti-circle-check"></i></div>
+            <div class="hist-body">
+              <div class="hist-title">Nota 001754 — Pharma Distribuidora</div>
+              <div class="hist-sub">40 itens · todos conferidos · sem divergência</div>
+            </div>
+            <div class="hist-right">
+              <div class="hist-date">25/06 · 11:20</div>
+              <div class="hist-valor">R$12.800,00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UNIDADES -->
+      <div class="panel" id="p-unidades">
+        <div class="metrics2">
+          <div class="metric"><div class="metric-label"><i class="ti ti-building-store"></i>Barão de Guaicuí</div><div class="metric-value">R$10.400</div><div class="metric-sub">Faturamento julho</div></div>
+          <div class="metric"><div class="metric-label"><i class="ti ti-building-store"></i>Largo Dom João</div><div class="metric-value">R$7.800</div><div class="metric-sub">Faturamento julho</div></div>
+        </div>
+        <div class="metrics2">
+          <div class="metric"><div class="metric-label"><i class="ti ti-building-store"></i>Nova unidade</div><div class="metric-value">R$4.640</div><div class="metric-sub">Faturamento julho</div></div>
+          <div class="metric"><div class="metric-label"><i class="ti ti-users"></i>Total de clientes</div><div class="metric-value">1.284</div><div class="metric-sub">Atendidos em julho</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-chart-bar"></i>Faturamento por unidade — julho</div>
+          <div class="bar-item"><div class="bar-label">Barão de Guaicuí</div><div class="bar-track"><div class="bar-fill" style="width:88%"></div></div><div class="bar-count" style="width:55px;font-size:11px">R$10.4k</div></div>
+          <div class="bar-item"><div class="bar-label">Largo Dom João</div><div class="bar-track"><div class="bar-fill g" style="width:62%"></div></div><div class="bar-count" style="width:55px;font-size:11px">R$7.8k</div></div>
+          <div class="bar-item"><div class="bar-label">Nova unidade</div><div class="bar-track"><div class="bar-fill o" style="width:35%"></div></div><div class="bar-count" style="width:55px;font-size:11px">R$4.6k</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const titles = {
+  resumo: ['Resumo do dia','Atualizado agora · domingo, 29 de junho de 2026'],
+  mensal: ['Visão mensal','Julho 2026 · comparativo com junho'],
+  conversas: ['Conversas','Clique em uma conversa para ver o histórico completo'],
+  vendas: ['Registro de vendas','Todas as vendas do dia com forma de pagamento'],
+  produtos: ['Produtos','Mais pedidos hoje e no mês'],
+  entregas: ['Entregas','Acompanhamento de motoboys e tempo de entrega'],
+  notas: ['Conferência de Notas','IA verifica automaticamente notas do fornecedor vs pedidos realizados'],
+  unidades: ['Por unidade','Desempenho de cada unidade em julho']
+};
+function go(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('p-' + id).classList.add('active');
+  btn.classList.add('active');
+  const t = titles[id];
+  document.getElementById('header-info').innerHTML = '<h2>' + t[0] + '</h2><p>' + t[1] + '</p>';
+}
+function toggleThread(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+function simularConferencia() {
+  const resultado = document.getElementById('conf-resultado');
+  const statusBar = document.getElementById('conf-status-bar');
+  const statusTexto = document.getElementById('conf-status-texto');
+  const tbody = document.getElementById('conf-tbody');
+  const totalValor = document.getElementById('conf-total-valor');
+  const totalLabel = document.getElementById('conf-total-label');
+
+  // Simula dois cenários alternadamente
+  const temDivergencia = Math.random() > 0.5;
+
+  const itens = [
+    { nome: 'Dipirona 500mg (cx 500 comp)', pedido: 10, recebido: temDivergencia ? 8 : 10, preco_ped: 'R$45,00', preco_nota: 'R$45,00' },
+    { nome: 'Paracetamol 750mg (cx 500 comp)', pedido: 5, recebido: 5, preco_ped: 'R$52,00', preco_nota: 'R$52,00' },
+    { nome: 'Losartana 50mg (cx 30 comp)', pedido: 20, recebido: 20, preco_ped: 'R$14,90', preco_nota: temDivergencia ? 'R$16,50' : 'R$14,90' },
+    { nome: 'Vitamina D 2000UI (cx 30 caps)', pedido: 15, recebido: 15, preco_ped: 'R$24,90', preco_nota: 'R$24,90' },
+    { nome: 'Dorflex (cx 30 comp)', pedido: 8, recebido: 8, preco_ped: 'R$24,90', preco_nota: 'R$24,90' },
+  ];
+
+  tbody.innerHTML = itens.map(item => {
+    const qtdOk = item.pedido === item.recebido;
+    const precoOk = item.preco_ped === item.preco_nota;
+    const status = qtdOk && precoOk
+      ? '<span class="pill entregue">✔ OK</span>'
+      : '<span class="pill atrasada">⚠ Divergência</span>';
+    return `<tr>
+      <td>${item.nome}</td>
+      <td>${item.pedido}</td>
+      <td class="${qtdOk ? 'ok' : 'err'}">${item.recebido}</td>
+      <td>${item.preco_ped}</td>
+      <td class="${precoOk ? 'ok' : 'warn'}">${item.preco_nota}</td>
+      <td>${status}</td>
+    </tr>`;
+  }).join('');
+
+  if (temDivergencia) {
+    statusBar.className = 'conf-status warn';
+    statusBar.querySelector('i').className = 'ti ti-alert-triangle';
+    statusTexto.textContent = 'Atenção — 2 divergências encontradas: quantidade e preço. Verifique antes de dar entrada.';
+    totalValor.textContent = 'R$3.189,20';
+    totalLabel.textContent = '⚠ Total com divergência';
+  } else {
+    statusBar.className = 'conf-status ok';
+    statusBar.querySelector('i').className = 'ti ti-circle-check';
+    statusTexto.textContent = 'Nota conferida com sucesso — todos os itens conferem com o pedido realizado.';
+    totalValor.textContent = 'R$3.247,80';
+    totalLabel.textContent = 'Total da nota — OK para entrada';
+  }
+
+  resultado.style.display = 'block';
+  resultado.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+const now = new Date();
+document.getElementById('current-date').textContent = now.toLocaleDateString('pt-BR');
+</script>
+</body>
+</html>
